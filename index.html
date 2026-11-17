@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เกษียณต้องมีเงินเท่าไหร่? คำนวณของคุณเอง · PlotlineThailand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f2ea; --card:#ffffff; --ink:#1d2420; --sub:#5f6862; --line:#e4ddd0;
+    --brand:#111614; --accent:#f2b705; --accent-soft:#fdf1c7;
+    --good:#2f7a4f; --bad:#b9472e; --bar:#d9d1c2;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Sarabun",system-ui,sans-serif;font-size:19px;line-height:1.55}
+  header{background:var(--brand);color:#fff;padding:22px 20px 26px;position:relative;overflow:hidden}
+  header::after{content:"";position:absolute;inset:0;background:
+    linear-gradient(transparent 31px,rgba(255,255,255,.05) 32px) 0 0/100% 32px,
+    linear-gradient(90deg,transparent 31px,rgba(255,255,255,.05) 32px) 0 0/32px 100%;pointer-events:none}
+  .brandline{font-size:14px;letter-spacing:.04em;opacity:.75;position:relative;z-index:1}
+  .brandline b{color:var(--accent);font-weight:700}
+  h1{font-size:30px;line-height:1.25;margin:8px 0 6px;font-weight:800;position:relative;z-index:1}
+  h1 span{color:var(--accent)}
+  header p{margin:0;opacity:.85;font-size:17px;position:relative;z-index:1}
+  main{max-width:640px;margin:0 auto;padding:18px 14px 40px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 8px;margin-bottom:16px}
+  .card h2{font-size:21px;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+  .num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--brand);font-weight:800;font-size:17px;flex:none}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-weight:600;margin-bottom:6px}
+  .hint{font-size:15px;color:var(--sub);margin-top:4px}
+  .stepper{display:flex;align-items:stretch;border:2px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+  .stepper:focus-within{border-color:var(--ink)}
+  .stepper button{flex:none;width:58px;border:0;background:#f1ece2;font-size:28px;font-weight:700;color:var(--ink);cursor:pointer;font-family:inherit}
+  .stepper button:active{background:var(--accent-soft)}
+  .stepper input{flex:1;min-width:0;border:0;text-align:center;font-size:24px;font-weight:700;font-family:inherit;color:var(--ink);padding:10px 4px;background:transparent}
+  .stepper input:focus{outline:none}
+  .unit{align-self:center;padding:0 12px 0 0;color:var(--sub);font-size:16px;white-space:nowrap}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .choices.three{grid-template-columns:1fr}
+  .choice{position:relative}
+  .choice input{position:absolute;opacity:0;pointer-events:none}
+  .choice span{display:block;border:2px solid var(--line);border-radius:12px;padding:10px 12px;font-size:17px;line-height:1.35;cursor:pointer;background:#fff;height:100%}
+  .choice span small{display:block;color:var(--sub);font-size:14px}
+  .choice input:checked + span{border-color:var(--ink);background:var(--accent-soft)}
+  .choice input:focus-visible + span{outline:3px solid var(--accent);outline-offset:2px}
+  .toggle{display:flex;gap:12px;align-items:flex-start;cursor:pointer;font-size:17px}
+  .toggle input{width:26px;height:26px;margin:2px 0 0;accent-color:var(--ink);flex:none}
+  .hidden{display:none !important}
+
+  .result{background:var(--brand);color:#fff;border:0}
+  .result h2{color:#fff}
+  .big{font-size:44px;font-weight:800;color:var(--accent);line-height:1.1;margin:4px 0 2px}
+  .big small{font-size:20px;color:#fff;font-weight:600}
+  .rlabel{font-size:16px;opacity:.8}
+  .rows{margin:14px 0 6px;border-top:1px solid rgba(255,255,255,.15)}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.12);font-size:17px}
+  .row b{white-space:nowrap}
+  .row .neg{color:#ffb4a3}
+  .row .pos{color:#9fe0b5}
+  .bars{margin:16px 0 8px}
+  .barrow{margin-bottom:10px}
+  .barrow .bl{display:flex;justify-content:space-between;font-size:15px;opacity:.9;margin-bottom:4px}
+  .track{height:18px;border-radius:9px;background:rgba(255,255,255,.12);overflow:hidden}
+  .fill{height:100%;border-radius:9px;background:var(--accent);width:0;transition:width .5s ease}
+  .fill.have{background:#8fd3a7}
+  .msg{background:rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;margin:12px 0;font-size:17px}
+  .msg.warn{background:rgba(242,183,5,.16);border:1px solid rgba(242,183,5,.5)}
+  .btn{display:block;width:100%;border:0;border-radius:12px;padding:14px;font-size:19px;font-weight:700;font-family:inherit;cursor:pointer;margin:10px 0 12px}
+  .btn.copy{background:var(--accent);color:var(--brand)}
+  .copied{font-size:15px;text-align:center;opacity:.85;min-height:22px;margin-bottom:8px}
+
+  .how{font-size:16px;color:var(--sub)}
+  .how h2{color:var(--ink)}
+  .how ol{padding-left:22px;margin:0 0 10px}
+  .how li{margin-bottom:6px}
+  .how a{color:var(--ink)}
+  footer{max-width:640px;margin:0 auto;padding:0 18px 40px;font-size:14px;color:var(--sub)}
+  footer b{color:var(--ink)}
+  @media (min-width:560px){ .choices.three{grid-template-columns:1fr 1fr} h1{font-size:34px} }
+</style>
+</head>
+<body>
+<header>
+  <div class="brandline"><b>PlotlineThailand</b> · ตัวเลขที่เล่าเรื่องประเทศไทย</div>
+  <h1>เกษียณต้องมีเงิน<span>เท่าไหร่?</span></h1>
+  <p>ใส่ตัวเลขของคุณ แล้วดูว่าต้องเก็บเดือนละเท่าไหร่ ใช้เวลา 1 นาที</p>
+</header>
+
+<main>
+  <form id="f" autocomplete="off" novalidate>
+  <section class="card">
+    <h2><span class="num">1</span>ตัวคุณ</h2>
+    <div class="field">
+      <label for="age">อายุตอนนี้</label>
+      <div class="stepper"><button type="button" data-step="age:-1" aria-label="ลด">−</button><input id="age" inputmode="numeric" value="40"><span class="unit">ปี</span><button type="button" data-step="age:1" aria-label="เพิ่ม">+</button></div>
+    </div>
+    <div class="field">
+      <label for="ret">อยากเกษียณตอนอายุ</label>
+      <div class="stepper"><button type="button" data-step="ret:-1" aria-label="ลด">−</button><input id="ret" inputmode="numeric" value="60"><span class="unit">ปี</span><button type="button" data-step="ret:1" aria-label="เพิ่ม">+</button></div>
+    </div>
+    <div class="field">
+      <label for="spend">อยากมีเงินใช้หลังเกษียณ เดือนละ</label>
+      <div class="stepper"><button type="button" data-step="spend:-1000" aria-label="ลด">−</button><input id="spend" inputmode="numeric" value="15,000"><span class="unit">บาท</span><button type="button" data-step="spend:1000" aria-label="เพิ่ม">+</button></div>
+      <div class="hint">คิดเป็นเงินวันนี้ ผู้สูงอายุไทยใช้จ่ายเฉลี่ยราว 8,000 บาท/เดือน</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">2</span>ประกันสังคม</h2>
+    <div class="field">
+      <div class="choices three" role="radiogroup" aria-label="สถานะประกันสังคม">
+        <label class="choice"><input type="radio" name="sso" value="33" checked><span>มาตรา 33<small>ลูกจ้างบริษัท</small></span></label>
+        <label class="choice"><input type="radio" name="sso" value="39"><span>มาตรา 39<small>ออกจากงานแล้วส่งต่อเอง</small></span></label>
+        <label class="choice"><input type="radio" name="sso" value="40"><span>มาตรา 40<small>อาชีพอิสระ / นอกระบบ</small></span></label>
+        <label class="choice"><input type="radio" name="sso" value="0"><span>ไม่มี / ไม่แน่ใจ<small>ไม่นับบำนาญ</small></span></label>
+      </div>
+    </div>
+    <div id="ssoFields">
+      <div class="field" id="wageField">
+        <label for="wage">ค่าจ้างต่อเดือน</label>
+        <div class="stepper"><button type="button" data-step="wage:-1000" aria-label="ลด">−</button><input id="wage" inputmode="numeric" value="15,000"><span class="unit">บาท</span><button type="button" data-step="wage:1000" aria-label="เพิ่ม">+</button></div>
+        <div class="hint">คิดสูงสุดที่ 15,000 ตามเพดานเดิม (ประมาณแบบระมัดระวัง)</div>
+      </div>
+      <div class="field">
+        <label for="yrs">ส่งเงินสมทบมาแล้ว</label>
+        <div class="stepper"><button type="button" data-step="yrs:-1" aria-label="ลด">−</button><input id="yrs" inputmode="numeric" value="15"><span class="unit">ปี</span><button type="button" data-step="yrs:1" aria-label="เพิ่ม">+</button></div>
+        <div class="hint">เช็กจำนวนเดือนจริงได้ในแอปหรือเว็บไซต์ประกันสังคม</div>
+      </div>
+      <div class="field">
+        <label class="toggle"><input type="checkbox" id="cont" checked><span>จะส่งต่อไปจนถึงอายุ 55 ปี (หรือจนเกษียณ ถ้าเร็วกว่านั้น)</span></label>
+      </div>
+    </div>
+    <div class="msg hidden" id="m40msg" style="background:#f1ece2;color:var(--ink)">มาตรา 40 ได้เงินชราภาพเป็น<b>เงินก้อน</b>ตอนอายุ 60 ไม่ใช่บำนาญรายเดือน เครื่องคิดเลขนี้จึงไม่นับเป็นรายได้ประจำ</div>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">3</span>เงินเก็บ</h2>
+    <div class="field">
+      <label for="have">เงินเก็บเพื่อเกษียณที่มีอยู่แล้ว</label>
+      <div class="stepper"><button type="button" data-step="have:-50000" aria-label="ลด">−</button><input id="have" inputmode="numeric" value="0"><span class="unit">บาท</span><button type="button" data-step="have:50000" aria-label="เพิ่ม">+</button></div>
+      <div class="hint">เช่น กองทุนสำรองเลี้ยงชีพ เงินฝาก กองทุน กอช.</div>
+    </div>
+    <div class="field">
+      <label>เงินที่เก็บ จะงอกเงยแค่ไหน</label>
+      <div class="choices" role="radiogroup" aria-label="ผลตอบแทน">
+        <label class="choice"><input type="radio" name="ret_r" value="0" checked><span>ฝากธนาคาร<small>ผลตอบแทนพอๆ กับเงินเฟ้อ</small></span></label>
+        <label class="choice"><input type="radio" name="ret_r" value="3"><span>ลงทุนระยะยาว<small>ชนะเงินเฟ้อราว 3%/ปี</small></span></label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="toggle"><input type="checkbox" id="allow" checked><span>นับเบี้ยยังชีพผู้สูงอายุ 600 บาท/เดือน</span></label>
+    </div>
+  </section>
+  </form>
+
+  <section class="card result" aria-live="polite">
+    <h2>ผลของคุณ</h2>
+    <div id="out"></div>
+    <button class="btn copy" id="copyBtn" type="button">คัดลอกผลลัพธ์ ไปส่งใน LINE</button>
+    <div class="copied" id="copied"></div>
+  </section>
+
+  <section class="card how">
+    <h2>คำนวณยังไง</h2>
+    <ol>
+      <li><b>เงินที่ต้องมี</b> = (ค่าใช้จ่ายต่อเดือน − รายได้ประจำ) × 12 × 25 ใช้หลัก 25 เท่า ซึ่งพอให้ถอนใช้ราวปีละ 4%</li>
+      <li><b>บำนาญประกันสังคม</b> (ม.33, ม.39) ส่งครบ 15 ปีได้ 20% ของค่าจ้างเฉลี่ย และเพิ่ม 1.5% ทุกปีที่ส่งเกิน ม.39 คิดที่ฐาน 4,800 บาท ถ้าส่งไม่ถึง 15 ปี จะได้เงินก้อน ไม่ใช่บำนาญ</li>
+      <li><b>ต้องเก็บเดือนละ</b> คิดจากตอนนี้จนถึงวันเกษียณ หักเงินเก็บที่มีอยู่แล้ว (รวมผลตอบแทน)</li>
+      <li>ทุกตัวเลขเป็น<b>เงินในวันนี้</b> เงินเฟ้อถูกคิดไว้แล้วผ่านผลตอบแทนที่ "ชนะเงินเฟ้อ"</li>
+    </ol>
+    <p>ดูคำอธิบายทุกขั้นตอนได้ในคลิป <b>เกษียณต้องมีเงินเท่าไหร่</b> และ <b>บำนาญประกันสังคม ได้จริงเท่าไหร่</b> ในช่อง <a href="https://www.youtube.com/results?search_query=PlotlineThailand">PlotlineThailand บน YouTube</a></p>
+  </section>
+</main>
+
+<footer>
+  <b>ข้อควรรู้:</b> เป็นการประมาณการเพื่อวางแผนเบื้องต้น ไม่ใช่คำแนะนำการลงทุน การลงทุนมีความเสี่ยง บำนาญจริงขึ้นกับประวัติการส่งเงินสมทบของแต่ละคน และสูตรใหม่ (CARE) ที่ยังรอประกาศใช้ ตรวจสอบตัวเลขของคุณกับสำนักงานประกันสังคม · ข้อมูลที่กรอกไม่ถูกส่งไปไหน คำนวณในเครื่องของคุณเท่านั้น
+</footer>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  const parse = el => { const v = parseFloat(String(el.value).replace(/[^0-9.]/g,'')); return isNaN(v) ? 0 : v; };
+  const LIMITS = {age:[18,90], ret:[45,80], spend:[0,500000], wage:[0,500000], yrs:[0,50], have:[0,1e9]};
+  const MONEY = new Set(['spend','wage','have']);
+
+  function setVal(id, v){
+    const [lo,hi] = LIMITS[id]; v = Math.min(hi, Math.max(lo, v));
+    $(id).value = MONEY.has(id) ? fmt(v) : String(Math.round(v));
+  }
+  document.querySelectorAll('[data-step]').forEach(b => b.addEventListener('click', () => {
+    const [id, d] = b.dataset.step.split(':'); setVal(id, parse($(id)) + Number(d)); calc();
+  }));
+  document.querySelectorAll('input').forEach(el => {
+    el.addEventListener('input', calc);
+    el.addEventListener('change', () => { if (LIMITS[el.id]) setVal(el.id, parse(el)); calc(); });
+  });
+  $('f').addEventListener('submit', e => e.preventDefault());
+
+  let lastText = '';
+
+  function pension(sso, wage, years){
+    if (sso !== '33' && sso !== '39') return {kind:'none', amt:0};
+    if (years < 15) return {kind:'lump', amt:0};
+    const base = sso === '39' ? 4800 : Math.min(wage, 15000);
+    const rate = 0.20 + 0.015 * Math.floor(years - 15);
+    return {kind:'pension', amt: base * rate, rate, base};
+  }
+
+  function calc(){
+    const age = parse($('age')), ret = parse($('ret')), spend = parse($('spend'));
+    const sso = document.querySelector('input[name=sso]:checked').value;
+    const wage = parse($('wage')), yrsNow = parse($('yrs')), cont = $('cont').checked;
+    const have = parse($('have'));
+    const r = Number(document.querySelector('input[name=ret_r]:checked').value) / 100;
+    const allow = $('allow').checked ? 600 : 0;
+
+    $('ssoFields').classList.toggle('hidden', !(sso === '33' || sso === '39'));
+    $('wageField').classList.toggle('hidden', sso !== '33');
+    $('m40msg').classList.toggle('hidden', sso !== '40');
+
+    const contribEnd = Math.min(55, ret);
+    const yrsTotal = yrsNow + (cont ? Math.max(0, contribEnd - age) : 0);
+    const p = pension(sso, wage, yrsTotal);
+    const stable = p.amt + allow;
+    const gap = Math.max(0, spend - stable);
+    const target = gap * 12 * 25;
+    const n = Math.max(0, ret - age);
+    const fvHave = have * Math.pow(1 + r, n);
+    const short = Math.max(0, target - fvHave);
+    const months = n * 12;
+    const rm = Math.pow(1 + r, 1/12) - 1;
+    const monthly = months === 0 ? 0 : (rm === 0 ? short / months : short * rm / (Math.pow(1 + rm, months) - 1));
+
+    let h = '';
+    if (spend <= 0) { $('out').innerHTML = '<div class="msg">ใส่ค่าใช้จ่ายต่อเดือนหลังเกษียณก่อน</div>'; lastText=''; return; }
+
+    if (n > 0 && short > 0) {
+      h += `<div class="rlabel">ต้องเก็บเพิ่ม ตั้งแต่วันนี้จนอายุ ${fmt(ret)}</div>
+            <div class="big">${fmt(monthly)} <small>บาท/เดือน</small></div>`;
+    } else if (short <= 0) {
+      h += `<div class="rlabel">จากตัวเลขที่ใส่</div><div class="big">ถึงเป้าแล้ว</div>`;
+    } else {
+      h += `<div class="rlabel">ถึงวัยเกษียณแล้ว ยังขาดอีก</div><div class="big">${fmt(short)} <small>บาท</small></div>`;
+    }
+
+    const pensionLabel = p.kind === 'pension' ? `${fmt(p.amt)} บาท` :
+                         p.kind === 'lump' ? 'ได้เงินก้อน (ส่งไม่ถึง 15 ปี)' : '—';
+    h += `<div class="rows">
+      <div class="row"><span>อยากใช้ต่อเดือน</span><b>${fmt(spend)} บาท</b></div>
+      <div class="row"><span>บำนาญประกันสังคม (ประมาณ)</span><b class="pos">${pensionLabel}</b></div>
+      ${allow ? `<div class="row"><span>เบี้ยยังชีพ</span><b class="pos">${fmt(allow)} บาท</b></div>` : ''}
+      <div class="row"><span>ส่วนที่ต้องเติมเองต่อเดือน</span><b class="neg">${fmt(gap)} บาท</b></div>
+      <div class="row"><span>เงินที่ต้องมีตอนเกษียณ (× 12 × 25)</span><b>${fmt(target)} บาท</b></div>
+      <div class="row"><span>เงินเก็บที่มี เมื่อถึงวันเกษียณ</span><b>${fmt(fvHave)} บาท</b></div>
+    </div>`;
+
+    const pct = target > 0 ? Math.min(100, fvHave / target * 100) : 100;
+    h += `<div class="bars">
+      <div class="barrow"><div class="bl"><span>เป้าหมาย</span><span>${fmt(target)}</span></div><div class="track"><div class="fill" style="width:100%"></div></div></div>
+      <div class="barrow"><div class="bl"><span>มีแล้ว (ตอนเกษียณ)</span><span>${pct.toFixed(0)}%</span></div><div class="track"><div class="fill have" style="width:${pct}%"></div></div></div>
+    </div>`;
+
+    if (sso === '39') h += `<div class="msg warn">มาตรา 39 คิดบำนาญที่ฐาน 4,800 บาท ถ้าก่อนหน้านี้เคยส่ง ม.33 ที่ค่าจ้างสูงกว่า บำนาญจริงอาจต่างไป และสูตรใหม่ (CARE) ที่รอประกาศใช้ จะช่วยคนกลุ่มนี้มากที่สุด</div>`;
+    if (p.kind === 'lump' && (sso === '33' || sso === '39')) h += `<div class="msg warn">ส่งรวม ${fmt(yrsTotal)} ปี ยังไม่ถึง 15 ปี (180 เดือน) จะได้เป็นเงินก้อนครั้งเดียว ไม่ใช่บำนาญตลอดชีวิต การส่งให้ครบ 180 เดือนสำคัญมาก</div>`;
+    if (n > 0 && r === 0 && short > 0) {
+      const months2 = months, rm2 = Math.pow(1.03,1/12)-1;
+      const short3 = Math.max(0, target - have * Math.pow(1.03, n));
+      const m3 = short3 * rm2 / (Math.pow(1+rm2, months2) - 1);
+      h += `<div class="msg">ถ้าเงินที่เก็บ ชนะเงินเฟ้อได้ราว 3% ต่อปี จะเหลือต้องเก็บราว <b>${fmt(m3)} บาท/เดือน</b></div>`;
+    }
+    if (n > 0 && short > 0 && age < 50) {
+      const late = ret - (age + 10);
+      if (late > 0) {
+        const mL = late*12, sL = Math.max(0, target - have*Math.pow(1+r, late));
+        const mLate = rm === 0 ? sL/mL : sL*rm/(Math.pow(1+rm,mL)-1);
+        h += `<div class="msg">ถ้ารออีก 10 ปีค่อยเริ่ม จะต้องเก็บเดือนละราว <b>${fmt(mLate)} บาท</b> เวลาคือตัวช่วยที่ใหญ่ที่สุด</div>`;
+      }
+    }
+    $('out').innerHTML = h;
+
+    lastText = `เกษียณต้องมีเงินเท่าไหร่ (คำนวณของฉัน)\n` +
+      `อายุ ${fmt(age)} · เกษียณ ${fmt(ret)} · อยากใช้ ${fmt(spend)} บาท/เดือน\n` +
+      `บำนาญประกันสังคม: ${pensionLabel}\n` +
+      `เงินที่ต้องมี: ${fmt(target)} บาท\n` +
+      (n > 0 && short > 0 ? `ต้องเก็บเดือนละ: ${fmt(monthly)} บาท\n` : '') +
+      `คำนวณที่ PlotlineThailand (ประมาณการ ไม่ใช่คำแนะนำการลงทุน)`;
+  }
+
+  $('copyBtn').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(lastText); $('copied').textContent = 'คัดลอกแล้ว วางใน LINE ได้เลย'; }
+    catch(e){ $('copied').textContent = 'คัดลอกไม่ได้ในหน้านี้ ลองแคปหน้าจอแทน'; }
+  });
+
+  calc();
+})();
+</script>
+</body>
+</html>
